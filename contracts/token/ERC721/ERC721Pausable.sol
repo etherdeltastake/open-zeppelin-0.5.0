@@ -6,7 +6,7 @@ import "../../lifecycle/Pausable.sol";
 /**
  * @title ERC721 Non-Fungible Pausable token
  * @dev ERC721 modified with pausable transfers.
- **/
+ */
 contract ERC721Pausable is ERC721, Pausable {
     function approve(address to, uint256 tokenId) public whenNotPaused {
         super.approve(to, tokenId);
@@ -16,7 +16,7 @@ contract ERC721Pausable is ERC721, Pausable {
         super.setApprovalForAll(to, approved);
     }
 
-    function transferFrom(address from, address to, uint256 tokenId) public whenNotPaused {
-        super.transferFrom(from, to, tokenId);
+    function _transferFrom(address from, address to, uint256 tokenId) internal whenNotPaused {
+        super._transferFrom(from, to, tokenId);
     }
 }
