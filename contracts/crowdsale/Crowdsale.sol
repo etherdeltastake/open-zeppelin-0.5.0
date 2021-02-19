@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "../GSN/Context.sol";
 import "../token/ERC20/IERC20.sol";
 import "../math/SafeMath.sol";
 import "../token/ERC20/SafeERC20.sol";
@@ -11,13 +12,13 @@ import "../utils/ReentrancyGuard.sol";
  * allowing investors to purchase tokens with ether. This contract implements
  * such functionality in its most fundamental form and can be extended to provide additional
  * functionality and/or custom behavior.
- * The external interface represents the basic interface for purchasing tokens, and conform
- * the base architecture for crowdsales. They are *not* intended to be modified / overridden.
+ * The external interface represents the basic interface for purchasing tokens, and conforms
+ * the base architecture for crowdsales. It is *not* intended to be modified / overridden.
  * The internal interface conforms the extensible and modifiable surface of crowdsales. Override
  * the methods to add functionality. Consider using 'super' where appropriate to concatenate
  * behavior.
  */
-contract Crowdsale is ReentrancyGuard {
+contract Crowdsale is Context, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -54,9 +55,9 @@ contract Crowdsale is ReentrancyGuard {
      * @param token Address of the token being sold
      */
     constructor (uint256 rate, address payable wallet, IERC20 token) public {
-        require(rate > 0);
-        require(wallet != address(0));
-        require(address(token) != address(0));
+        require(rate > 0, "Crowdsale: rate is 0");
+        require(wallet != address(0), "Crowdsale: wallet is the zero address");
+        require(address(token) != address(0), "Crowdsale: token is the zero address");
 
         _rate = rate;
         _wallet = wallet;
@@ -65,12 +66,12 @@ contract Crowdsale is ReentrancyGuard {
 
     /**
      * @dev fallback function ***DO NOT OVERRIDE***
-     * Note that other contracts will transfer fund with a base gas stipend
+     * Note that other contracts will transfer funds with a base gas stipend
      * of 2300, which is not enough to call buyTokens. Consider calling
      * buyTokens directly when purchasing tokens from a contract.
      */
     function () external payable {
-        buyTokens(msg.sender);
+        buyTokens(_msgSender());
     }
 
     /**
@@ -118,7 +119,7 @@ contract Crowdsale is ReentrancyGuard {
         _weiRaised = _weiRaised.add(weiAmount);
 
         _processPurchase(beneficiary, tokens);
-        emit TokensPurchased(msg.sender, beneficiary, weiAmount, tokens);
+        emit TokensPurchased(_msgSender(), beneficiary, weiAmount, tokens);
 
         _updatePurchasingState(beneficiary, weiAmount);
 
@@ -136,8 +137,9 @@ contract Crowdsale is ReentrancyGuard {
      * @param weiAmount Value in wei involved in the purchase
      */
     function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal view {
-        require(beneficiary != address(0));
-        require(weiAmount != 0);
+        require(beneficiary != address(0), "Crowdsale: beneficiary is the zero address");
+        require(weiAmount != 0, "Crowdsale: weiAmount is 0");
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
     }
 
     /**
